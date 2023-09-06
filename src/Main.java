@@ -13,7 +13,7 @@ public class Main {
             System.out.println("\t\t\t\t\n:::::::::::::::::::::::::: Menu Principale ::::::::::::::::::::::::::\n\n");
             System.out.println("\t\t\t 1- Introduire un livre ");
             System.out.println("\t\t\t 2- Introduire plusieurs livres ");
-            System.out.println("\t\t\t 3- Emprunté un livre ");
+            System.out.println("\t\t\t 3- Modifier un livre ");
             System.out.println("\t\t\t 4- Affichage ");
             System.out.println("\t\t\t 5- Supprimer un livre ");
             System.out.print("\t\t\t 6- Quitter L'application\n\n");
@@ -45,6 +45,16 @@ public class Main {
                 case 2:
                     break;
                 case 3:
+
+                    System.out.println("Veuillez entre le isbn de livre que vous voulez Modifier");
+                    isbn = input.nextLine();
+                    System.out.println("Veuillez entre le nouveau titre");
+                    titre = input.nextLine();
+                    System.out.println("Veuillez entre le nouveau auteur");
+                    id_auteur = input.nextInt();
+
+                    success = Book.updateLivre(titre,id_auteur,isbn);
+
                     break;
                 case 4:
                     Book.afficherLivres();
@@ -53,7 +63,7 @@ public class Main {
                     String is;
                     System.out.println("donner le isbn de livre que vous voulez supprimer");
                     is = input.nextLine();
-                    success = Book.supprimerLivre(is);
+                    success = Book.deleteLivre(is);
                     if (success) {
                         System.out.println("Livre supprimer successfully.");
                     } else {

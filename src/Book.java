@@ -41,18 +41,6 @@ public class Book {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sqlQuery);
 
-            // Process the result set here
-         /*   while (resultSet.next()) {
-                int columnCount = resultSet.getMetaData().getColumnCount();
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(resultSet.getString(i) + "\t");
-                }
-                System.out.println() ;// Newline after each row
-                System.out.println(columnCount);
-
-            }*/
-
-
             while (resultSet.next()) {
                 int columnCount = resultSet.getMetaData().getColumnCount();
 
@@ -119,7 +107,6 @@ public class Book {
 
     }
 
-   // public static boolean addLivre(String titre, String statut, String isbn, int id_gestionnaire, int id_auteur, int id_emprunteur)
    public static boolean addLivre(Book book) {
        String insertQuery = "INSERT INTO livre (title, statut, isbn, id_gestionnaire, id_auteur, id_emprunteur) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -148,13 +135,32 @@ public class Book {
    }
 
 
-    public static boolean supprimerLivre(String isbn) {
+    public static boolean updateLivre(String titre,Integer id_auteur,String isbn) {
+        String insertQuery = "UPDATE livre set title=?, id_auteur=? where isbn=?";
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+            preparedStatement.setString(1,titre);
+            preparedStatement.setInt(2,id_auteur);
+            preparedStatement.setString(3,isbn);
+            int rowsAffected = preparedStatement.executeUpdate();
+            Connect.closeConnection();
+            return rowsAffected > 0; // Return true if a row was inserted
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public static boolean deleteLivre(String isbn) {
         String sqlQuery = "DELETE FROM livre WHERE isbn=?";
 
         try (Connection connection = Connect.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
             preparedStatement.setString(1, isbn);
             int rowsAffected = preparedStatement.executeUpdate();
+            Connect.closeConnection();
             return rowsAffected > 0; // Return true if a row was deleted
         } catch (SQLException e) {
             e.printStackTrace();
