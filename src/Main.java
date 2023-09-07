@@ -8,7 +8,7 @@ public class Main {
 
         int choix,id_gestionnaire,id_auteur,id_emprunteur ;
         boolean success;
-        String titre,isbn,statut;
+        String titre,isbn,statut,auteur;
         do {
             System.out.println("\t\t\t\t\n:::::::::::::::::::::::::: Menu Principale ::::::::::::::::::::::::::\n\n");
             System.out.println("\t\t\t 1- Introduire un livre ");
@@ -16,7 +16,8 @@ public class Main {
             System.out.println("\t\t\t 3- Modifier un livre ");
             System.out.println("\t\t\t 4- Affichage ");
             System.out.println("\t\t\t 5- Supprimer un livre ");
-            System.out.print("\t\t\t 6- Quitter L'application\n\n");
+            System.out.println("\t\t\t 6- Chercher un livre ");
+            System.out.print("\t\t\t 7- Quitter L'application\n\n");
             System.out.print("\t\t\t Donnez votre choix: ");
             choix = input.nextInt();
             input.nextLine();
@@ -43,6 +44,7 @@ public class Main {
 
                     break;
                 case 2:
+
                     break;
                 case 3:
 
@@ -70,10 +72,46 @@ public class Main {
                         System.out.println("Failed to  the livre.");
                     }
                     break;
+                case 6:
+                    do{
+                        System.out.println("1 - Chercher par titre");
+                        System.out.println("2 - Chercher par auteur");
+                        System.out.println("3 - Retour sur le menu principal");
+                        choix = input.nextInt();
+                        input.nextLine();
+                        switch (choix)
+                            {
+                                case 1:
+                                {
+                                    System.out.println("Veuillez entre le titre");
+                                    titre=input.nextLine();
+                                    success = Book.chercherLivreParTitre(titre);
+                                    if (!success) {
+                                        System.out.println("Il ya aucun livre avec ce titre");
+                                    }
+
+                                }
+
+                                    break;
+                                case 2:
+                                    System.out.println("Veuillez entre l'auteur");
+                                    auteur=input.nextLine();
+                                    success = Book.chercherLivreParAuteur(auteur);
+                                    if (!success) {
+                                        System.out.println("Il ya aucun livre crier par ce auteur");
+                                    }
+
+                                    break;
+                                case 3:
+                                    break;
+                                default:
+                                    System.out.println("Choix incorrect");
+                            }
+                    }while(choix != 3);
                 default:
 
             }
-        } while (choix != 6);
+        } while (choix != 7);
 
 
         System.out.print("\t\t\t Fin de programme ... \n\n");
