@@ -1,5 +1,6 @@
 
 
+import javax.swing.*;
 import java.sql.*;
 
 public class Book {
@@ -30,9 +31,6 @@ public class Book {
 
     }
 
-    //public static final String jdbcUrl = "jdbc:mysql://localhost:3306/library";
-   // public static final String username = "root";
-    //public static final String password = "";
    public static void afficherLivres()
     {
         String sqlQuery = "SELECT l.titre, l.statut, l.isbn, g.nom_gestionnaire , a.nom_auteur as auteur, em.nom_emprunteur  FROM livre AS l LEFT JOIN auteur AS a ON l.id_auteur = a.id LEFT JOIN gestionnare AS g ON l.id_gestionnaire = g.id LEFT JOIN emprunteur AS em ON l.id_emprunteur = em.id ";
@@ -155,6 +153,55 @@ public class Book {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public static boolean updateLivreStatus(String statut,int id_emprunteur,String isbn) {
+        boolean dejaEmprunte = true;
+        String checkQuery = "select statut from livre  where isbn=aqw and statut='disponible'";
+        try (Connection connection = Connect.getConnection();
+             Statement statement = connection.createStatement();
+
+             //preparedStatement.setString(1,isbn);
+             ResultSet resultSet = statement.executeQuery(checkQuery)) {
+
+            if (resultSet.next()) {
+                //lastEmprunteurId = resultSet.getInt("id");
+                dejaEmprunte = false;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        finally {
+            Connect.closeConnection();
+        }
+
+
+        String insertQuery = "UPDATE livre set statut=?, id_emprunteur=?  where isbn=?";
+
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+            preparedStatement.setString(1, statut);
+            preparedStatement.setInt(2, id_emprunteur);
+            preparedStatement.setString(3, isbn);
+            if (dejaEmprunte == false) {
+                int rowsAffected = preparedStatement.executeUpdate();
+                Connect.closeConnection();
+                return rowsAffected > 0; // Return true if a row was inserted
+            } else
+            {
+                System.out.println("Ce livre déja empunté");
+                return false;
+            }
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
     }
 
     public static boolean chercherLivreParTitre(String titre)
