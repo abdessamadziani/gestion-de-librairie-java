@@ -133,6 +133,7 @@ public class Book {
            return rowsAffected > 0; // Return true if a row was inserted
        } catch (SQLException e) {
            e.printStackTrace();
+           Connect.closeConnection();
            return false;
        }
    }
@@ -151,13 +152,14 @@ public class Book {
              return rowsAffected > 0; // Return true if a row was inserted
         } catch (SQLException e) {
             e.printStackTrace();
+            Connect.closeConnection();
             return false;
         }
     }
 
-    public static boolean updateLivreStatus(String statut,int id_emprunteur,String isbn) {
+/*    public static boolean updateLivreStatus(String statut,int id_emprunteur,String isbn) {
         boolean dejaEmprunte = true;
-        String checkQuery = "select statut from livre  where isbn=aqw and statut='disponible'";
+        String checkQuery = "select statut from livre  where isbn=? and statut='disponible'";
         try (Connection connection = Connect.getConnection();
              Statement statement = connection.createStatement();
 
@@ -202,7 +204,151 @@ public class Book {
             return false;
         }
 
+    }*/
+
+
+
+
+
+
+
+
+    public static boolean checkLivreEmprunte(String isbn) {
+        String checkQuery = "SELECT statut FROM livre WHERE isbn=? AND statut='disponible'";
+        boolean statut=true;
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(checkQuery)) {
+            preparedStatement.setString(1, isbn);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                statut=true; // Book is available
+            } else {
+                // Book is not available
+                statut=false;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            Connect.closeConnection();
+        }
+        return statut;
+
     }
+
+
+
+
+
+    public static boolean updateLivreStatus(String statut, int id_emprunteur, String isbn) {
+        String checkQuery = "SELECT statut FROM livre WHERE isbn=? AND statut='disponible'";
+        boolean alreadyEmprunt =true;  // itialize to false
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(checkQuery)) {
+            preparedStatement.setString(1, isbn);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                alreadyEmprunt =false; // Book is already borrowed
+                String updateQuery = "UPDATE livre SET statut=?, id_emprunteur=? WHERE isbn=?";
+                try (PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+                    updateStatement.setString(1, statut);
+                    updateStatement.setInt(2, id_emprunteur);
+                    updateStatement.setString(3, isbn);
+                    int rowsAffected = updateStatement.executeUpdate();
+                    System.out.println("Livre mis à jour.");
+                    return rowsAffected > 0; // Return true if a row was updated
+                }
+            } else {
+                // Book is available, proceed with the update
+                System.out.println("Ce livre est déjà emprunté");
+
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        finally {
+            Connect.closeConnection();
+        }
+        return alreadyEmprunt; // Return true if book is already borrowed, false if there was an error
+    }
+
+
+    public static boolean returnLivre(String statut,String cin, String isbn,int id_emprunteur ) {
+        String checkQuery = "SELECT cin FROM emprunteur WHERE cin=?";
+        boolean borrower =false;  // itialize to false
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(checkQuery)) {
+            preparedStatement.setString(1,cin);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                borrower =true; // Book is already borrowed
+                String updateQuery = "UPDATE livre SET statut=?, id_emprunteur=null WHERE isbn=?";
+                try (PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+                    updateStatement.setString(1, statut);
+                    updateStatement.setString(2, isbn);
+
+                    int rowsAffected = updateStatement.executeUpdate();
+                    System.out.println("Livre mis à jour.");
+                    return rowsAffected > 0; // Return true if a row was updated
+                }
+            } else {
+                // Book is available, proceed with the update
+                System.out.println("Ce livre est déjà emprunté");
+
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        finally {
+            Connect.closeConnection();
+        }
+        return borrower; // Return true if book is already borrowed, false if there was an error
+    }
+
+    public static boolean checkDate() {
+        String checkQuery = "SELECT l.statut, em.cin FROM emprunteur em INNER JOIN livre l ON l.id_emprunteur = em.id WHERE CURRENT_DATE > em.date_return AND l.statut = 'emprunté' ";
+        boolean borrower =false;  // itialize to false
+
+        try (Connection connection = Connect.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(checkQuery)) {
+            //preparedStatement.setString(1,cin);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                borrower =true; // Book is already borrowed
+                String updateQuery = "UPDATE livre l INNER JOIN emprunteur em ON l.id_emprunteur = em.id SET l.statut = 'perdu' WHERE l.statut = 'emprunté' AND CURRENT_DATE > em.date_return ";
+                try (PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+                    int rowsAffected = updateStatement.executeUpdate();
+                    System.out.println("Livres perdu mis à jour.");
+                    return rowsAffected > 0; // Return true if a row was updated
+                }
+            } else {
+                // Book is available, proceed with the update
+                System.out.println("ilya pas des livre perdu");
+
+
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        finally {
+            Connect.closeConnection();
+        }
+        return borrower; // Return true if book is already borrowed, false if there was an error
+    }
+
+
 
     public static boolean chercherLivreParTitre(String titre)
         {
@@ -388,12 +534,91 @@ public class Book {
              PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
             preparedStatement.setString(1, isbn);
             int rowsAffected = preparedStatement.executeUpdate();
-            //Connect.closeConnection();
+            Connect.closeConnection();
             return rowsAffected > 0; // Return true if a row was deleted
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+
+
+
+    public static void raportStatistiques()
+    {
+        String sqlQuery = "SELECT COUNT(CASE WHEN statut = 'disponible' THEN 1 ELSE NULL END) AS 'Livres Disponible', COUNT(CASE WHEN statut = 'emprunte' THEN 1 ELSE NULL END) AS 'Livres Emprunté', COUNT(CASE WHEN statut = 'perdu' THEN 1 ELSE NULL END) AS 'Livres Perdu',COUNT(*) AS 'Total Livres' FROM livre";
+
+        try (Connection connection = Connect.getConnection()) {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+
+            while (resultSet.next()) {
+                int columnCount = resultSet.getMetaData().getColumnCount();
+
+
+
+                // Define the border characters
+                char horizontalBorder = '-';
+                char verticalBorder = '|';
+                char cornerBorder = '+';
+
+                // Print the top border
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(cornerBorder);
+                    for (int j = 0; j <20; j++) { // Adjust the width (e.g., 20 characters)
+                        System.out.print(horizontalBorder);
+                    }
+                }
+                System.out.println(cornerBorder); // End of the top border
+
+                // Print column headers and data
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnHeader = resultSet.getMetaData().getColumnName(i);
+                    System.out.printf("%c %-18s ", verticalBorder, columnHeader); // Adjust the width (e.g., 20 characters)
+
+                }
+                System.out.println(verticalBorder); // End of the headers row
+
+                // Print rows
+                do {
+
+
+                    // Print the top border
+                    for (int k = 1; k <= columnCount; k++) {
+                        System.out.print(cornerBorder);
+                        for (int j = 0; j <20; j++) { // Adjust the width (e.g., 20 characters)
+                            System.out.print(horizontalBorder);
+                        }
+                    }
+                    System.out.println(cornerBorder); // End of the top border
+
+
+                    for (int i = 1; i <= columnCount; i++) {
+                        String columnValue = resultSet.getString(i);
+                        System.out.printf("%c %-18s ", verticalBorder, columnValue); // Adjust the width (e.g., 20 characters)
+                    }
+                    System.out.println(verticalBorder); // End of each data row
+
+                } while (resultSet.next());
+
+                // Print the bottom border
+                for (int i = 1; i <= columnCount; i++) {
+                    System.out.print(cornerBorder);
+                    for (int j = 0; j < 20; j++) { // Adjust the width (e.g., 20 characters)
+                        System.out.print(horizontalBorder);
+                    }
+                }
+                System.out.println(cornerBorder); // End of the bottom border
+            }
+
+
+            Connect.closeConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
 

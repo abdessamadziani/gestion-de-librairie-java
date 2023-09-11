@@ -8,10 +8,10 @@ public class Main {
         Scanner input = new Scanner(System.in);
 
 
-        int choix,id_gestionnaire,id_auteur,id_emprunteur ;
-        boolean success;
+        int choix,id_gestionnaire,id_auteur,id_emprunteur,emp_id ;
+        boolean success,checkStatut;
         LocalDate dateEmprunt,dateRetour;
-        String titre,isbn,statut,auteur;
+        String titre,isbn,statut,auteur,cin;
         do {
             System.out.println("\t\t\t\t\n:::::::::::::::::::::::::: Menu Principale ::::::::::::::::::::::::::\n\n");
             System.out.println("\t\t\t 1- Introduire un livre ");
@@ -21,7 +21,10 @@ public class Main {
             System.out.println("\t\t\t 5- Supprimer un livre ");
             System.out.println("\t\t\t 6- Chercher un livre ");
             System.out.println("\t\t\t 7- Emprunter un livre ");
-            System.out.print("\t\t\t 8- Quitter L'application\n\n");
+            System.out.println("\t\t\t 8- Retourner un livre ");
+            System.out.println("\t\t\t 9- Check livres perdu ");
+            System.out.println("\t\t\t 10- Rapport Statistiques ");
+            System.out.print("\t\t\t 11- Quitter L'application\n\n");
             System.out.print("\t\t\t Donnez votre choix: ");
             choix = input.nextInt();
             input.nextLine();
@@ -105,41 +108,68 @@ public class Main {
 
                                     break;
                                 case 3:
+
                                     break;
                                 default:
                                     System.out.println("Choix incorrect");
+                                    break;
                             }
                     }while(choix != 3);
+                    break;
                 case 7:
                      dateEmprunt = LocalDate.now();
                      dateRetour = LocalDate.now().plusDays(7);
-                     String emprunteur_nom,emprunteur_prenom,cin;
+                     String emprunteur_nom,emprunteur_prenom;
                     System.out.println("entre le nom de l'emprunteur");
                     emprunteur_nom=input.nextLine();
                     System.out.println("entre le prenom de l'emprunteur");
                     emprunteur_prenom=input.nextLine();
                     System.out.println("entre le cin de l'emprunteur ");
                     cin=input.nextLine();
-                    Emprunteur emp = new Emprunteur(emprunteur_nom,emprunteur_prenom,cin,dateEmprunt,dateRetour);
-                    success = Emprunteur.addEmprunteur(emp);
-                    if (success) {
-                        System.out.println("Emprunteur added successfully.");
-                        System.out.println("Veuillez enter le isbn que vous voulez emprunté: ");
-                        isbn=input.nextLine();
-                        int emp_id;
-                        emp_id=Emprunteur.getIdOfLastEmprunteur();
-                        Book.updateLivreStatus("emprunté",emp_id,isbn);
-                        System.out.println(emp_id);
+                    System.out.println("Veuillez enter le isbn que vous voulez emprunté: ");
+                    isbn=input.nextLine();
+                    checkStatut=Book.checkLivreEmprunte(isbn);
+                    if(checkStatut)
+                        {
+                            Emprunteur emp = new Emprunteur(emprunteur_nom,emprunteur_prenom,cin,dateEmprunt,dateRetour);
+                            success = Emprunteur.addEmprunteur(emp);
+                            checkStatut=false;
+                            if (success) {
+                                System.out.println("Emprunteur added successfully.");
+                                /*System.out.println("Veuillez enter le isbn que vous voulez emprunté: ");
+                                isbn=input.nextLine();*/
+                                emp_id=Emprunteur.getIdOfLastEmprunteur();
+                                Book.updateLivreStatus("emprunté",emp_id,isbn);
 
 
-                    } else {
-                        System.out.println("Failed to add the emprunteur (cin already existe)");
-                    }
+                            } else {
+                                System.out.println("Failed to add the emprunteur (cin already existe)");
+                            }
 
+                        }
+                    else
+                        System.out.println("Ce livre deja Emprunté");
+                    break;
+                case 8:
+                    System.out.println("entre le cin de l'emprunteur ");
+                    cin=input.nextLine();
+                    System.out.println("entre le isbn de livre que vous voulez retourner");
+                    isbn=input.nextLine();
+                    Book.returnLivre("disponible",cin,isbn,0);
+                    break;
+                case 9:
+                    Book.checkDate();
+
+                    break;
+                case 10:
+                    Book.raportStatistiques();
+                    break;
+                case 11:
+                    break;
                 default:
 
             }
-        } while (choix != 8);
+        } while (choix != 11);
 
 
         System.out.print("\t\t\t Fin de programme ... \n\n");
